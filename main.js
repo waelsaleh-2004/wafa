@@ -43,6 +43,10 @@ const errorModal = document.getElementById("errorModal");
 const warningModal = document.getElementById("warningModal");
 const correctAnswerHint = document.getElementById("correctAnswerHint");
 
+// 🎵 إنشاء كائنات المؤثرات الصوتية للأجوبة
+const successSound = new Audio("./audio/meldix-success-340660.mp3");
+const wrongSound = new Audio("./audio/u_8g40a9z0la-fail-234710.mp3");
+
 const feedbackText = document.createElement("div");
 feedbackText.style.fontSize = "1.2rem";
 feedbackText.style.fontWeight = "bold";
@@ -57,6 +61,9 @@ function loadQuestion(){
     feedbackText.textContent = ""; 
 
     document.getElementById("current").textContent = currentQuestion + 1;
+    // تحديث إجمالي الأسئلة ديناميكياً بناءً على حجم مصفوفة الأسئلة المتوفرة
+    document.getElementById("total").textContent = quizData.length; 
+    
     question.textContent = quizData[currentQuestion].question;
     answers.innerHTML = "";
 
@@ -80,6 +87,10 @@ function loadQuestion(){
                 feedbackText.style.color = "#2ecc71";
                 score++; 
                 
+                // 🔊 تشغيل صوت النجاح فوراً
+                successSound.currentTime = 0; 
+                successSound.play().catch(e => console.log("المتصفح يقيد الصوت قبل التفاعل اللمسي الأول"));
+
                 successModal.style.display = "flex";
                 setTimeout(() => {
                     successModal.style.display = "none";
@@ -94,6 +105,10 @@ function loadQuestion(){
                 const allButtons = answers.querySelectorAll("button");
                 allButtons[correctIndex].style.backgroundColor = "#2ecc71";
                 allButtons[correctIndex].style.color = "white";
+
+                // 🔊 تشغيل صوت الخطأ فوراً
+                wrongSound.currentTime = 0;
+                wrongSound.play().catch(e => console.log("المتصفح يقيد الصوت قبل التفاعل اللمسي الأول"));
 
                 correctAnswerHint.innerHTML = `الإجابة الصحيحة هي: <strong>"${quizData[currentQuestion].answers[correctIndex]}"</strong>`;
                 errorModal.style.display = "flex";
@@ -114,7 +129,6 @@ function loadQuestion(){
 loadQuestion();
 
 nextBtn.addEventListener("click", () => {
-    // استبدال الـ alert التقليدي بالشاشة المنبثقة الاحترافية للتنبيه
     if (selectedAnswer === null) {
         warningModal.style.display = "flex";
         setTimeout(() => {
