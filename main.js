@@ -31,21 +31,40 @@ let score = 0;
 let selectedAnswer = null;
 let hasAnswered = false; 
 
+// ربط عناصر شاشة البدء
+const startContainer = document.getElementById("startContainer");
+const startBtn = document.getElementById("startBtn");
+const quizContent = document.getElementById("quizContent");
+
 const question = document.getElementById("question");
 const answers = document.getElementById("answers");
 const nextBtn = document.getElementById("nextBtn");
 const scoreText = document.getElementById("scoreText");
 const resultContainer = document.getElementById("resultContainer");
+const restartBtn = document.getElementById("restartBtn");
 
-// ربط عناصر الشاشات المنبثقة
 const successModal = document.getElementById("successModal");
 const errorModal = document.getElementById("errorModal");
 const warningModal = document.getElementById("warningModal");
 const correctAnswerHint = document.getElementById("correctAnswerHint");
 
-// 🎵 إنشاء كائنات المؤثرات الصوتية للأجوبة
+// 🎵 إنشاء كائنات المؤثرات الصوتية من مجلد audio
 const successSound = new Audio("./audio/meldix-success-340660.mp3");
 const wrongSound = new Audio("./audio/u_8g40a9z0la-fail-234710.mp3");
+
+// برمجية زر ابدأ الاختبار لفك قفل الصوت لمتصفح كروم
+startBtn.addEventListener("click", () => {
+    // الخدعة الذكية: تشغيل وإيقاف الصوت صامتاً لتخويل الموقع بالصوت
+    successSound.play().then(() => { successSound.pause(); successSound.currentTime = 0; }).catch(()=>{});
+    wrongSound.play().then(() => { wrongSound.pause(); wrongSound.currentTime = 0; }).catch(()=>{});
+
+    // إخفاء واجهة الترحيب وعرض واجهة الاختبار
+    startContainer.style.display = "none";
+    quizContent.style.display = "block";
+    
+    // بدء شحن السؤال الأول الآن والصوت مفعل
+    loadQuestion();
+});
 
 const feedbackText = document.createElement("div");
 feedbackText.style.fontSize = "1.2rem";
@@ -61,7 +80,6 @@ function loadQuestion(){
     feedbackText.textContent = ""; 
 
     document.getElementById("current").textContent = currentQuestion + 1;
-    // تحديث إجمالي الأسئلة ديناميكياً بناءً على حجم مصفوفة الأسئلة المتوفرة
     document.getElementById("total").textContent = quizData.length; 
     
     question.textContent = quizData[currentQuestion].question;
@@ -87,14 +105,11 @@ function loadQuestion(){
                 feedbackText.style.color = "#2ecc71";
                 score++; 
                 
-                // 🔊 تشغيل صوت النجاح فوراً
-                successSound.currentTime = 0; 
-                successSound.play().catch(e => console.log("المتصفح يقيد الصوت قبل التفاعل اللمسي الأول"));
+                successSound.currentTime = 0;
+                successSound.play().catch(e => console.log(e));
 
                 successModal.style.display = "flex";
-                setTimeout(() => {
-                    successModal.style.display = "none";
-                }, 1500);
+                setTimeout(() => { successModal.style.display = "none"; }, 1500);
 
             } else {
                 btn.style.backgroundColor = "#e74c3c"; 
@@ -106,16 +121,12 @@ function loadQuestion(){
                 allButtons[correctIndex].style.backgroundColor = "#2ecc71";
                 allButtons[correctIndex].style.color = "white";
 
-                // 🔊 تشغيل صوت الخطأ فوراً
                 wrongSound.currentTime = 0;
-                wrongSound.play().catch(e => console.log("المتصفح يقيد الصوت قبل التفاعل اللمسي الأول"));
+                wrongSound.play().catch(e => console.log(e));
 
                 correctAnswerHint.innerHTML = `الإجابة الصحيحة هي: <strong>"${quizData[currentQuestion].answers[correctIndex]}"</strong>`;
                 errorModal.style.display = "flex";
-                
-                setTimeout(() => {
-                    errorModal.style.display = "none";
-                }, 2000);
+                setTimeout(() => { errorModal.style.display = "none"; }, 2000);
             }
         });
 
@@ -126,14 +137,10 @@ function loadQuestion(){
     document.querySelector(".progress-fill").style.width = progress + "%";
 }
 
-loadQuestion();
-
 nextBtn.addEventListener("click", () => {
     if (selectedAnswer === null) {
         warningModal.style.display = "flex";
-        setTimeout(() => {
-            warningModal.style.display = "none";
-        }, 1500);
+        setTimeout(() => { warningModal.style.display = "none"; }, 1500);
         return;
     }
 
@@ -142,12 +149,18 @@ nextBtn.addEventListener("click", () => {
     if (currentQuestion < quizData.length) {
         loadQuestion();
     } else {
-        question.innerHTML = `انتهى الاختبار 🎉`;
-        answers.innerHTML = "";
-        feedbackText.remove(); 
-        nextBtn.style.display = "none";
-        
+        quizContent.style.display = "none"; 
         resultContainer.style.display = "block";
         scoreText.textContent = `${score} / ${quizData.length}`; 
     }
 });
+
+if (restartBtn) {
+    restartBtn.addEventListener("click", () => {
+        currentQuestion = 0;
+        score = 0;
+        resultContainer.style.display = "none";
+        quizContent.style.display = "block";
+        loadQuestion();
+    });
+}
